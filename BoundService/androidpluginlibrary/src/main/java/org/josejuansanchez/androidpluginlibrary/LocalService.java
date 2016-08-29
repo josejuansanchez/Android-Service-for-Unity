@@ -37,7 +37,6 @@ public class LocalService extends Service {
     }
 
     public void connect(final String uri, final String clientId, final String username, final String password) {
-
         try {
             mMqttClient = new MqttAsyncClient(uri, clientId, null);
             mMqttClient.setCallback(new MyMqttCallback());
@@ -59,7 +58,6 @@ public class LocalService extends Service {
     }
 
     public void connect(final String uri, final String clientId) {
-
         try {
             mMqttClient = new MqttAsyncClient(uri, clientId, null);
             mMqttClient.setCallback(new MyMqttCallback());
@@ -109,7 +107,6 @@ public class LocalService extends Service {
     }
 
     public class MyMqttCallback implements MqttCallback {
-
         public void connectionLost(Throwable cause) {
             Log.d(TAG, "MQTT Server connection lost: " + cause.toString());
             cause.printStackTrace();
@@ -122,10 +119,5 @@ public class LocalService extends Service {
         public void deliveryComplete(IMqttDeliveryToken token) {
             Log.d(TAG, "Delivery complete");
         }
-    }
-
-    public boolean isMqttClientConnected() {
-        if (mMqttClient ==  null) return false;
-        return mMqttClient.isConnected();
     }
 }
