@@ -25,9 +25,8 @@ public class MainActivity extends AppCompatActivity {
             mService = binder.getService();
             mBound = true;
 
-            //if (!mService.isMqttClientConnected()) {
-                mService.subscribe(Config.uri, Config.topicSubscribe, Config.clientId, 1);
-            //}
+            mService.connect(Config.uri, Config.clientId);
+            mService.subscribe(Config.topicSubscribe, 1);
         }
 
         @Override
@@ -61,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onButtonClick(View v) {
         if (mBound) {
-            mService.publish(Config.uri, Config.topicPublish, Config.clientId, Config.username, Config.password, "Hello");
+            mService.publish(Config.topicPublish, "Hello");
         }
     }
 }
