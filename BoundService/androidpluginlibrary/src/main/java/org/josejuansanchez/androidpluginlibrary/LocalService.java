@@ -1,4 +1,4 @@
-package org.josejuansanchez.boundservice;
+package org.josejuansanchez.androidpluginlibrary;
 
 import android.app.Service;
 import android.content.Intent;
@@ -14,13 +14,12 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 public class LocalService extends Service {
-
     public static final String TAG = LocalService.class.getSimpleName();
     private final IBinder mBinder = new LocalBinder();
     private MqttClient mMqttClient = null;
 
     public class LocalBinder extends Binder {
-        LocalService getService() {
+        public LocalService getService() {
             return LocalService.this;
         }
     }

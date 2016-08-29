@@ -9,6 +9,8 @@ import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import org.josejuansanchez.androidpluginlibrary.LocalService;
+
 public class MainActivity extends AppCompatActivity {
 
     LocalService mService;
@@ -23,9 +25,9 @@ public class MainActivity extends AppCompatActivity {
             mService = binder.getService();
             mBound = true;
 
-            if (!mService.isMqttClientConnected()) {
+            //if (!mService.isMqttClientConnected()) {
                 mService.subscribe(Config.uri, Config.topicSubscribe, Config.clientId, 1);
-            }
+            //}
         }
 
         @Override

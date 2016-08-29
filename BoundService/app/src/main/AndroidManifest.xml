@@ -18,10 +18,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".LocalService"
-            android:enabled="true"
-            android:exported="true"></service>
     </application>
 
 </manifest>
