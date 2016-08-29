@@ -7,16 +7,18 @@ import android.os.IBinder;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 public class LocalService extends Service {
     public static final String TAG = LocalService.class.getSimpleName();
+    private static final int CONNECT_TIMEOUT = 2000;
     private final IBinder mBinder = new LocalBinder();
-    private MqttClient mMqttClient = null;
+    private MqttAsyncClient mMqttClient = null;
 
     public class LocalBinder extends Binder {
         public LocalService getService() {
@@ -31,73 +33,78 @@ public class LocalService extends Service {
 
     @Override
     public void onDestroy() {
-        try {
-            mMqttClient.disconnect();
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
+        disconnect();
     }
 
-    public void publish(final String uri, final String topic, final String clientId,
-                        final String username, final String password, final String payload) {
-
-        new Thread(new Runnable() {
-            public void run() {
-                MqttClient client = null;
-                try {
-                    client = new MqttClient(uri, clientId, null);
-                    client.setCallback(new MyMqttCallback());
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
-
-                MqttConnectOptions options = new MqttConnectOptions();
-                //options.setUserName(username);
-                //options.setPassword(password.toCharArray());
-
-                try {
-                    client.connect(options);
-                } catch (MqttException e) {
-                    Log.d(TAG, "Connection attempt failed with reason code: " + e.getReasonCode() + ":" + e.getCause());
-                }
-
-                try {
-                    MqttMessage mqttMessage = new MqttMessage();
-                    mqttMessage.setPayload(payload.getBytes());
-                    client.publish(topic, mqttMessage);
-                    client.disconnect();
-                }
-                catch (MqttException e) {
-                    Log.d(TAG, "Publish failed with reason code: " + e.getReasonCode());
-                }
-            }
-        }).start();
-    }
-
-    public void subscribe(final String uri, final String topic, final String clientId, int qos) {
+    public void connect(final String uri, final String clientId, final String username, final String password) {
 
         try {
-            mMqttClient = new MqttClient(uri, clientId, null);
+            mMqttClient = new MqttAsyncClient(uri, clientId, null);
             mMqttClient.setCallback(new MyMqttCallback());
         } catch (MqttException e) {
             e.printStackTrace();
         }
 
         MqttConnectOptions options = new MqttConnectOptions();
-        //options.setUserName(username);
-        //options.setPassword(password.toCharArray());
+        options.setUserName(username);
+        options.setPassword(password.toCharArray());
 
         try {
-            mMqttClient.connect(options);
+            final IMqttToken connectToken = mMqttClient.connect(options);
+            connectToken.waitForCompletion(CONNECT_TIMEOUT);
         } catch (MqttException e) {
             Log.d(TAG, "Connection attempt failed with reason code: " + e.getReasonCode() + ":" + e.getCause());
+            e.printStackTrace();
+        }
+    }
+
+    public void connect(final String uri, final String clientId) {
+
+        try {
+            mMqttClient = new MqttAsyncClient(uri, clientId, null);
+            mMqttClient.setCallback(new MyMqttCallback());
+        } catch (MqttException e) {
+            e.printStackTrace();
         }
 
+        try {
+            final IMqttToken connectToken = mMqttClient.connect();
+            connectToken.waitForCompletion(CONNECT_TIMEOUT);
+        } catch (MqttException e) {
+            Log.d(TAG, "Connection attempt failed with reason code: " + e.getReasonCode() + ":" + e.getCause());
+            e.printStackTrace();
+        }
+    }
+
+
+    public void publish(final String topic, final String payload) {
+        try {
+            MqttMessage mqttMessage = new MqttMessage();
+            mqttMessage.setPayload(payload.getBytes());
+            mMqttClient.publish(topic, mqttMessage);
+        }
+        catch (MqttException e) {
+            Log.d(TAG, "Publish failed with reason code: " + e.getReasonCode());
+            e.printStackTrace();
+        }
+    }
+
+    public void subscribe(final String topic, int qos) {
         try {
             mMqttClient.subscribe(topic, qos);
         }
         catch (MqttException e) {
-            Log.d(TAG, "Publish failed with reason code: " + e.getReasonCode());
+            Log.d(TAG, "Subscribe failed with reason code: " + e.getReasonCode());
+            e.printStackTrace();
+        }
+    }
+
+    public void disconnect() {
+        try {
+            mMqttClient.disconnect();
+        } catch (MqttException e) {
+            Log.d(TAG, "Disconnect failed with reason code: " + e.getReasonCode());
+            e.printStackTrace();
         }
     }
 
@@ -105,6 +112,7 @@ public class LocalService extends Service {
 
         public void connectionLost(Throwable cause) {
             Log.d(TAG, "MQTT Server connection lost: " + cause.toString());
+            cause.printStackTrace();
         }
 
         public void messageArrived(String topic, MqttMessage message) {
